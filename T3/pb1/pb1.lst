@@ -1,0 +1,86 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...((a + b) + (a + c) + (b + c)) - d  a - octet, b - cuvânt, c - cuvânt dublu, d - qword - Reprezentare fără semn
+    14                                      
+    15 00000000 0A                          a db 10
+    16 00000001 0D00                        b dw 13
+    17 00000003 14000000                    c dd 20
+    18 00000007 1E00000000000000            d dq 30
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23                                          ; ...
+    24                                          
+    25 00000000 B800000000                      mov eax,0
+    26 00000005 BA00000000                      mov edx,0 ; pentru scaderea cu d
+    27                                          
+    28                                          
+    29                                          
+    30 0000000A 8A1D[00000000]                  mov bl,byte [a]
+    31 00000010 B700                            mov bh,0
+    32 00000012 66031D[01000000]                add bx,word [b] ; bx <- a+b
+    33                                          
+    34                                          
+    35                                          
+    36 00000019 A0[00000000]                    mov al, byte [a]
+    37                                          
+    38 0000001E B400                            mov ah,0
+    39 00000020 66BA0000                        mov dx,0
+    40                                          
+    41 00000024 F8                              clc
+    42                                          
+    43                                          add ax, dword [c]
+    43          ******************       error: mismatch in operand sizes
+    44                                          adc dx, dword [c+2] ;dx:ax <- a+c
+    44          ******************       error: mismatch in operand sizes
+    45                                          
+    46 00000025 F8                              clc
+    47                                          
+    48                                          
+    49                                          
+    50 00000026 6601D8                          add ax, bx
+    51 00000029 66B90000                        mov cx,0
+    52 0000002D 6611CA                          adc dx, cx ; dx:ax <- (a + b) + (a + c)
+    53                                          
+    54 00000030 F8                              clc
+    55                                          
+    56                                          
+    57                                          
+    58 00000031 668B1D[01000000]                mov bx, word [b]
+    59 00000038 66B90000                        mov cx,0
+    60                                          
+    61                                          add bx, dword [c]
+    61          ******************       error: mismatch in operand sizes
+    62                                          adc cx, dword [c+2] ; cx:bx <- b+c
+    62          ******************       error: mismatch in operand sizes
+    63                                          
+    64 0000003C F8                              clc
+    65                                          
+    66 0000003D 6601D8                          add ax,bx
+    67 00000040 6611CA                          adc dx,cx ; dx:ax <- (a + b) + (a + c) + (b + c)
+    68                                          
+    69 00000043 F8                              clc
+    70                                          
+    71                                          sub eax, qword[d]
+    71          ******************       error: mismatch in operand sizes
+    72                                          sbb edx, qword[d+4]
+    72          ******************       error: mismatch in operand sizes
+    73                                          
+    74                                          ; edx:eax <- ((a + b) + (a + c) + (b + c)) - d
+    75                                          
+    76                                          
+    77                                         
+    78                                          ; exit(0)
+    79 00000044 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    80 00000046 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

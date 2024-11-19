@@ -1,0 +1,64 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...(a + b + c) - d + (b - c)  a - octet, b - cuvânt, c - cuvânt dublu, d - qword - Reprezentare semnată
+    14                                      
+    15 00000000 0A                          a db 10
+    16 00000001 1400                        b dw 20
+    17 00000003 19000000                    c dd 25
+    18 00000007 2D00000000000000            d dq 45
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23                                          
+    24 00000000 A0[00000000]                    mov al,byte[a]
+    25 00000005 6698                            cbw
+    26 00000007 660305[01000000]                add ax, word [b] ; ax <- a+b
+    27 0000000E 6699                            cwd
+    28 00000010 F8                              clc
+    29                                          add ax, dword [c]
+    29          ******************       error: mismatch in operand sizes
+    30                                          adc dx, dword [c+2] ; dx:ax <- a+b+c
+    30          ******************       error: mismatch in operand sizes
+    31 00000011 F8                              clc
+    32                                          
+    33                                          
+    34                                          
+    35                                          sub eax, qword[d]
+    35          ******************       error: mismatch in operand sizes
+    36                                          sbb edx, qword[d+4] ; edx:eax <- (a+b+c)-d
+    36          ******************       error: mismatch in operand sizes
+    37 00000012 F8                              clc
+    38                                          
+    39 00000013 89C3                            mov ebx,eax
+    40 00000015 89D1                            mov ecx,edx ; ecx:ebx <- (a+b+c)-d
+    41                                          
+    42                                          
+    43 00000017 66A1[01000000]                  mov ax, word[b]
+    44 0000001D 6699                            cwd 
+    45                                          sub ax, dword[c]
+    45          ******************       error: mismatch in operand sizes
+    46                                          sbb dx, dword[c+2] ; dx:ax <- b-c
+    46          ******************       error: mismatch in operand sizes
+    47 0000001F F8                              clc
+    48                                          
+    49 00000020 98                              cwde
+    50                                          
+    51 00000021 01D8                            add eax, ebx
+    52 00000023 11CA                            adc edx, ecx ; edx:eax <- (a + b + c) - d + (b - c)
+    53                                          
+    54                                          
+    55                                          
+    56                                          ; exit(0)
+    57 00000025 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    58 00000027 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
