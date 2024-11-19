@@ -1,0 +1,53 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14                                      ;(10*a-5*b)+(d-5*c)
+    15                                      
+    16 00000000 03                          a db 3
+    17 00000001 02                          b db 2
+    18 00000002 04                          c db 4
+    19 00000003 0500                        d dw 5
+    20                                  
+    21                                  ; our code starts here
+    22                                  segment code use32 class=code
+    23                                      start:
+    24                                         
+    25                                      ; a*10
+    26 00000000 B00A                        mov al,10
+    27 00000002 F625[00000000]              mul byte[a] ; ax <- a*10
+    28                                      
+    29                                      ;salvam rezultatul in bx <- a*10
+    30 00000008 6689C3                      mov bx,ax
+    31 0000000B 66B80000                    mov ax, 0 
+    32                                      
+    33                                      
+    34 0000000F B005                        mov al, 5
+    35 00000011 F625[01000000]              mul byte [b] ; ax <- b*5
+    36                                      
+    37 00000017 6629C3                      sub bx,ax ; bx <- 10*a-5*b
+    38                                      
+    39 0000001A B005                        mov al, 5
+    40 0000001C B400                        mov ah,0
+    41 0000001E F625[02000000]              mul byte [c] ; ax <- 5*c
+    42                                      
+    43 00000024 668B0D[03000000]            mov cx, word [d] 
+    44                                      
+    45 0000002B 6629C1                      sub cx,ax ;cx<- d-5*c
+    46                                      
+    47 0000002E 6601D9                      add cx,bx ; cx <- (10*a-5*b)+(d-5*c)
+    48                                      
+    49                                      ; rezultatul final va fi in cx
+    50                                      
+    51                                          ; exit(0)
+    52 00000031 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    53 00000033 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
