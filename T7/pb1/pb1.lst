@@ -1,0 +1,76 @@
+     1                                  bits 32 
+     2                                  
+     3                                  
+     4                                  global start        
+     5                                  
+     6                                  
+     7                                  extern exit, printf, scanf          
+     8                                  import exit msvcrt.dll    
+     9                                  import printf msvcrt.dll
+    10                                  import scanf msvcrt.dll
+    11                                                            
+    12                                  
+    13                                  
+    14                                  segment data use32 class=data
+    15                                      ; Se citesc de la tastatura doua numere a si b. Sa se calculeze valoarea expresiei (a/b)*k, k fiind o constanta definita in ;segmentul de date. Afisati valoarea expresiei.
+    16                                      
+    17 00000000 613D2000                    mesaj_a db "a= ", 0
+    18 00000004 256400                      format_a db "%d", 0
+    19 00000007 00000000                    a dd 0
+    20                                      
+    21 0000000B 623D2000                    mesaj_b db "b= ", 0
+    22 0000000F 256400                      format_b db "%d", 0
+    23 00000012 00000000                    b dd 0
+    24                                  
+    25 00000016 0D000000                    k dd 13
+    26                                      
+    27 0000001A 28612F62292A6B3D20-         mesaj db "(a/b)*k= %lld", 0
+    27 00000023 256C6C6400         
+    28                                  
+    29                                  segment code use32 class=code
+    30                                      start:
+    31                                      
+    32                                      ; citirea lui a
+    33                                     
+    34 00000000 68[00000000]                push mesaj_a
+    35 00000005 FF15[00000000]              call [printf]
+    36 0000000B 83C404                      add esp, 4
+    37                                      
+    38 0000000E 68[07000000]                push dword a
+    39 00000013 68[04000000]                push dword format_a
+    40 00000018 FF15[00000000]              call [scanf]
+    41 0000001E 83C408                      add esp, 4*2
+    42                                      
+    43                                      ; citirea lui b
+    44                                      
+    45 00000021 68[0B000000]                push mesaj_b
+    46 00000026 FF15[00000000]              call [printf]
+    47 0000002C 83C404                      add esp, 4
+    48                                      
+    49 0000002F 68[12000000]                push dword b
+    50 00000034 68[0F000000]                push dword format_b
+    51 00000039 FF15[00000000]              call [scanf]
+    52 0000003F 83C408                      add esp, 4*2
+    53                                  
+    54                                      ; calculam (a/b)*k
+    55                                      
+    56 00000042 A1[07000000]                mov eax,[a]
+    57 00000047 BA00000000                  mov edx,0
+    58                                      
+    59 0000004C F735[12000000]              div dword[b] ; EAX = a/b
+    60                                      
+    61 00000052 BA00000000                  mov edx,0
+    62                                      
+    63 00000057 F725[16000000]              mul dword[k]
+    64                                      
+    65                                      ; afisam rezulatatul
+    66                                      
+    67 0000005D 52                          push edx
+    68 0000005E 50                          push eax
+    69 0000005F 68[1A000000]                push mesaj
+    70 00000064 FF15[00000000]              call [printf]
+    71 0000006A 83C40C                      add esp,4*3
+    72                                      
+    73                                          
+    74 0000006D 6A00                            push    dword 0      
+    75 0000006F FF15[00000000]                  call    [exit]       

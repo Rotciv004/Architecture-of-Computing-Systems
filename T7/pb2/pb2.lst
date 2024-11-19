@@ -1,0 +1,110 @@
+     1                                  bits 32 
+     2                                  
+     3                                  
+     4                                  global start        
+     5                                  ;Se dau un nume de fisier si un text (definite in segmentul de date). Textul contine litere mici, litere mari, cifre si ;caractere speciale. Sa se inlocuiasca toate CIFRELE din textul dat cu caracterul 'C'. Sa se cr
+     6                                  
+     7                                  extern exit, fopen, fread, fclose, fprintf
+     8                                  import exit msvcrt.dll  
+     9                                  import fopen msvcrt.dll  
+    10                                  import fread msvcrt.dll
+    11                                  import fclose msvcrt.dll
+    12                                  import fprintf msvcrt.dll
+    13                                  
+    14                                  section .data
+    15 00000000 696D702E74787400            fisier_intrare db "imp.txt", 0                   ; input file
+    16 00000008 7200                        mod_accesare_fisier_intrare db "r", 0               ;input mode
+    17 0000000A 6F75742E74787400            fisier_iesire db "out.txt", 0                       ; output file
+    18 00000012 7700                        mod_accesare_fisier_iesire db "w", 0              ; output mode
+    19 00000014 FFFFFFFF                    descriptor_intrare dd -1                        ; file descriptor input
+    20 00000018 FFFFFFFF                    descriptor_iesire dd -1                            ; file descriptor output
+    21 0000001C 257300                      textul_propriu_zis db "%s",0
+    22                                      
+    23                                      len equ 100
+    24 0000001F 00<rept>                    text times (len+1) db 0
+    25                                  
+    26                                  segment code use32 class=code
+    27                                      global start
+    28                                  
+    29                                  start:
+    30                                      
+    31 00000000 68[08000000]                push dword mod_accesare_fisier_intrare
+    32 00000005 68[00000000]                push dword fisier_intrare
+    33 0000000A FF15[00000000]              call [fopen]
+    34 00000010 83C408                      add esp, 4*2
+    35 00000013 A3[14000000]                mov [descriptor_intrare], eax
+    36                                  
+    37                                      
+    38 00000018 83F800                      cmp eax, 0
+    39 0000001B 0F848B000000                je file_open_error
+    40                                  
+    41                                      
+    42 00000021 68[12000000]                push dword mod_accesare_fisier_iesire
+    43 00000026 68[0A000000]                push dword fisier_iesire
+    44 0000002B FF15[00000000]              call [fopen]
+    45 00000031 83C408                      add esp, 4*2
+    46 00000034 A3[18000000]                mov [descriptor_iesire], eax
+    47                                  
+    48                                      
+    49 00000039 83F800                      cmp eax, 0
+    50 0000003C 746E                        je file_open_error
+    51                                      
+    52                                      ; citirea textului
+    53                                      
+    54 0000003E FF35[14000000]              push dword [descriptor_intrare]
+    55 00000044 6A64                        push dword len
+    56 00000046 6A01                        push dword 1
+    57 00000048 68[1F000000]                push dword text
+    58 0000004D FF15[00000000]              call [fread]
+    59 00000053 83C410                      add esp,4*4
+    60                                      
+    61 00000056 83F800                      cmp eax,0
+    62 00000059 741A                        je end_parcurgere
+    63                                      
+    64 0000005B BE[1F000000]                mov esi, text
+    65 00000060 BF[1F000000]                mov edi, text
+    66 00000065 89C1                        mov ecx, eax
+    67                                      
+    68                                      
+    69                                      parcurgere:
+    70 00000067 AC                              lodsb
+    71 00000068 3C30                            cmp AL, '0'
+    72 0000006A 7206                            jb not_digit
+    73 0000006C 3C39                            cmp AL, '9'
+    74 0000006E 7702                            ja not_digit
+    75                                  
+    76 00000070 B043                            mov AL, 'C'
+    77                                          
+    78                                          
+    79                                          not_digit:
+    80                                              
+    81 00000072 AA                              stosb
+    82                                          
+    83                                      
+    84 00000073 E2F2                        loop parcurgere
+    85                                      
+    86                                      end_parcurgere:
+    87                                      
+    88                                      ; fprintf(FILE, "%s", text)
+    89 00000075 68[1F000000]                push dword text
+    90 0000007A 68[1C000000]                push dword textul_propriu_zis
+    91 0000007F FF35[18000000]              push dword [descriptor_iesire]
+    92 00000085 FF15[00000000]              call [fprintf]
+    93 0000008B 83C60C                      add esi,4*3
+    94                                  
+    95                                  
+    96                                      
+    97                                  
+    98 0000008E FF35[18000000]                  push dword [descriptor_iesire]
+    99 00000094 FF15[00000000]                  call [fclose]
+   100 0000009A 83C404                          add esp, 4
+   101                                  
+   102 0000009D FF35[14000000]                  push dword [descriptor_intrare]
+   103 000000A3 FF15[00000000]                  call [fclose]
+   104 000000A9 83C404                          add esp, 4
+   105                                          
+   106                                          file_open_error:
+   107                                         
+   108                                  
+   109 000000AC 6A00                            push    dword 0      
+   110 000000AE FF15[00000000]                  call    [exit]       
