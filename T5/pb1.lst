@@ -1,0 +1,58 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  extern exit               
+     6                                  import exit msvcrt.dll  
+     7                                  
+     8                                  ;Sunt date două șiruri de octeți A și B. Se obține șirul R prin concatenarea elementelor lui B în ordine ;inversă și elementelor lui A în ordine inversă.
+     9                                  ;Exemplu:
+    10                                  ;A: 2, 1, -3, 0
+    11                                  ;B: 4, 5, 7, 6, 2, 1
+    12                                  ;R: 1, 2, 6, 7, 5, 4, 0, -3, 1, 2
+    13                                  
+    14                                  segment data use32 class=data
+    15                                  
+    16 00000000 0201FD00                A db 2 , 1 , -3 , 0
+    17                                  lA equ $-A
+    18                                  
+    19 00000004 040507060201            B db 4 , 5 , 7 , 6 , 2 , 1
+    20                                  lB equ $-B
+    21                                  
+    22 0000000A 00<rept>                R times lA+lB db 0
+    23                                     
+    24                                  segment code use32 class=code
+    25                                      start:
+    26                                      
+    27 00000000 BF00000000                  mov edi , 0 ; adresa pentru lungimea vectorului R
+    28                                      
+    29 00000005 B906000000                  mov ecx , lB ; lungimea vectorului B
+    30 0000000A BE06000000                  mov esi , lB ; adresa pentru parcurgerea vectorului B
+    31                                      
+    32                                      ConstruireB:
+    33                                      
+    34 0000000F 8A9E[04000000]                  mov bl , [B+esi] ; adaugam elementele din B in R in rodine inversa
+    35 00000015 889F[0A000000]                  mov [R+edi] , bl 
+    36                                          
+    37 0000001B 47                              inc edi ; crestem adresa pentru lungimea vectorului R cu o unitate
+    38 0000001C 4E                              dec esi ; decrementam adresa vectorului B cu o unitate
+    39                                          
+    40 0000001D E2F0                        LOOP ConstruireB
+    41                                      
+    42                                      
+    43 0000001F B904000000                  mov ecx , lA ; lungimea vectorului A
+    44 00000024 BE04000000                  mov esi , lA ; adresa pentru marcurgerea vectorului A
+    45                                      
+    46                                      
+    47                                      ConstruireA:
+    48                                      
+    49 00000029 8A9E[00000000]                  mov bl , [A+esi] ; adaugam elementele din A in R in rodine inversa
+    50 0000002F 889F[0A000000]                  mov [R+edi] , bl 
+    51                                          
+    52 00000035 47                              inc edi ; crestem adresa pentru lungimea vectorului R cu o unitate
+    53 00000036 4E                              dec esi ; decrementam adresa vectorului A cu o unitate
+    54                                          
+    55 00000037 E2F0                        Loop ConstruireA
+    56                                          
+    57 00000039 6A00                            push    dword 0      
+    58 0000003B FF15[00000000]                  call    [exit]       
