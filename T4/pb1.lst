@@ -1,0 +1,42 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                  
+    14                                  ;Având în vedere cuvântul dublu M, calculați cuvântul dublu MNou după cum urmează:
+    15                                  ;biții 0-3 a ai MNew sunt aceiași cu biții 5-8 a ai M.
+    16                                  ;biții 4-7 a ai MNew au valoarea 1
+    17                                  ;biții 27-31 a ai MNew au valoarea 0
+    18                                  ;biții 8-26 ai lui MNew sunt aceiași cu biții 8-26 a ai lui M.
+    19                                  
+    20 00000000 19879144                 M dd 01000100100100011000011100011001b
+    21                                  
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                    
+    26 00000000 A1[00000000]              mov eax, dword[M]
+    27                                    
+    28 00000005 8B1D[00000000]            mov ebx,dword[M]
+    29 0000000B 81E3E0010000              and ebx, 00000000000000000000000111100000b
+    30 00000011 B105                      mov cl,5
+    31 00000013 D3C3                      rol ebx,cl
+    32 00000015 09D8                      or eax,ebx ;biții 0-3 a ai MNew sunt aceiași cu biții 5-8 a ai M.
+    33                                    
+    34 00000017 0DF0000000                or eax,00000000000000000000000011110000b ;biții 4-7 a ai MNew au valoarea 1
+    35 0000001C 25FFFFFF07                and eax, 00000111111111111111111111111111b ;biții 27-31 a ai MNew au valoarea 0
+    36                                    
+    37 00000021 8B1D[00000000]            mov ebx, dword[M] ; facem o copie la eax in ebx pentru a putea lucra cu exb
+    38 00000027 81E300FFFF0F              and ebx, 00001111111111111111111100000000b
+    39 0000002D 09D8                      or eax,ebx ;biții 8-26 ai lui MNew sunt aceiași cu biții 8-26 a ai lui M.
+    40                                      
+    41 0000002F 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    42 00000031 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
