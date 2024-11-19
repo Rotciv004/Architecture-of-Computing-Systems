@@ -1,2 +1,2 @@
 # Architecture-of-Computing-Systems
-Here I have some problems solved in Assembly
+Assembly programs exploring low-level concepts like memory management, interrupt handling, system calls, and CPU instructions.
