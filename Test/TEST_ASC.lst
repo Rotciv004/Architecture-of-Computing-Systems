@@ -1,0 +1,164 @@
+     1                                  bits 32 
+     2                                  
+     3                                  
+     4                                  global start        
+     5                                  
+     6                                  
+     7                                  extern exit,scanf,printf,fscanf,fopen,fclose         
+     8                                  import exit msvcrt.dll
+     9                                  import scanf msvcrt.dll
+    10                                  import printf msvcrt.dll
+    11                                  import fscanf msvcrt.dll
+    12                                  import fopen msvcrt.dll
+    13                                  import fclose msvcrt.dll    
+    14                                                            
+    15                                  
+    16                                  
+    17                                  segment data use32 class=data
+    18 00000000 00                      N db 0
+    19 00000001 00                      numar_fisier db 0
+    20                                  
+    21 00000002 64616100                tst db 'daa',0
+    22 00000006 257300                  md_tst db '%s',0
+    23                                  
+    24 00000009 256900                  mod_citire_numere_fisier db '%i',0
+    25 0000000C 25692000                mod_afisare_numare_fisier db '%i ',0
+    26 00000010 256900                  mod_adresare_citire_de_la_tastatura db '%i',0
+    27                                  
+    28 00000013 00<rept>                nume_fisier_text times 100 db 0
+    29 00000077 7200                    mod_adresare_fisier_text db 'r',0
+    30 00000079 FF                      indexare_fisier_text db -1
+    31                                  
+    32                                  
+    33                                  
+    34                                  segment code use32 class=code
+    35                                      start:
+    36                                      
+    37                                      ; citirea numarului N si a numelui fiserului de la tastatura
+    38                                      
+    39                                      ;scanf(format,N,nume)
+    40                                      ;push dword nume_fisier_text
+    41 00000000 68[00000000]                push dword N
+    42 00000005 68[10000000]                push dword mod_adresare_citire_de_la_tastatura
+    43 0000000A FF15[00000000]              call [scanf]
+    44 00000010 83C40C                      add esp, 4*3
+    45                                      
+    46                                      
+    47                                      ; pana aici aven N si numele fisierului
+    48                                      
+    49                                      ;deschidem fisierul unde se afla numerele
+    50                                      
+    51                                      ;push dword mod_adresare_fisier_text
+    52                                      ;push dword nume_fisier_text
+    53                                      ;call [fopen]
+    54                                      ;add esp, 4*2
+    55                                      
+    56                                      ;mov [indexare_fisier_text],eax
+    57                                      ;cmp eax,0
+    58                                      ;je erroare_deschidere
+    59                                      
+    60                                      ;am deschis fisierul si putem incepe citirea pe rand a numerelor din el
+    61                                      
+    62                                      citire_numere_fisier:
+    63                                      
+    64                                      
+    65 00000013 68[01000000]                    push dword numar_fisier
+    66 00000018 68[09000000]                    push dword mod_citire_numere_fisier
+    67 0000001D FF15[00000000]                  call [scanf]
+    68 00000023 83C408                          add esp,4*2
+    69                                          
+    70                                          ;push dword [indexare_fisier_text]
+    71                                          ;push dword numar_fisier
+    72                                          ;push dword mod_citire_numere_fisier
+    73                                          ;call [fscanf]
+    74                                          ;add esp, 4*3
+    75                                          
+    76 00000026 A0[01000000]                    mov al, [numar_fisier]
+    77 0000002B 3C00                            cmp al, 0
+    78 0000002D 7420                            je nu_mai_avem_numere_in_fisier
+    79                                          
+    80                                          ;pana aici avem citit un numar din fisier si verificam daca nu cumva s-au terminat numerele din fisier
+    81                                          ;il avem depozitat in AL
+    82                                          
+    83                                          ;trebuie sa vedem daca este pozitiv sau nu
+    84                                          
+    85 0000002F 7C1C                            jl nu_este_numar_pozitiv
+    86                                          
+    87                                          ;daca am ajuns aici inseamna ca avem un numar pozitiv. Mai ramane de verificat daca are cifra zecilor egala cu N
+    88                                          ;verificam daca cifra zecilor este egala cu N
+    89                                          
+    90 00000031 E821000000                      call verificam_daca_cifra_zecilor_este_egala_cu_N
+    91 00000036 83F900                          cmp ecx, 0
+    92 00000039 7412                            je nu_avem_pe_pozitia_zecilor_cifra_N
+    93                                          ;daca am ajuns aici inseamna ca pe pozitia zecilor avem cifra N si putem face afisarea
+    94                                          
+    95                                          ; facem afisarea
+    96 0000003B 6698                            cbw
+    97 0000003D 98                              cwde
+    98                                          
+    99                                          ;printf(format,eax)
+   100 0000003E 50                              push dword eax
+   101 0000003F 68[0C000000]                    push dword mod_afisare_numare_fisier
+   102 00000044 FF15[00000000]                  call [printf]
+   103 0000004A 83C408                          add esp, 4*2
+   104                                          
+   105                                          ;push dword tst
+   106                                          ;push dword md_tst
+   107                                          ;call [printf]
+   108                                          ;add esp, 4*2
+   109                                          
+   110                                          nu_este_numar_pozitiv:
+   111                                          nu_avem_pe_pozitia_zecilor_cifra_N:
+   112                                          
+   113 0000004D EBC4                        jmp citire_numere_fisier
+   114                                      
+   115                                      nu_mai_avem_numere_in_fisier:
+   116                                      
+   117                                      ;inchidem fisierul din care citim numerele
+   118                                      ;push dword [indexare_fisier_text]
+   119                                      ;call [fclose]
+   120                                      ;add esp, 4
+   121                                      
+   122                                      
+   123                                      erroare_deschidere:
+   124                                          
+   125 0000004F 6A00                            push    dword 0      
+   126 00000051 FF15[00000000]                  call    [exit]       
+   127                                          
+   128                                          
+   129                                          
+   130                                          
+   131                                          
+   132                                  verificam_daca_cifra_zecilor_este_egala_cu_N:
+   133                                      
+   134                                      ;in AL avem numarul
+   135 00000057 88C3                        mov bl,al ; facem o copie a lui AL pentru a nu-l pierde
+   136 00000059 B10A                        mov cl,10
+   137 0000005B 6698                        cbw ;convertim nuamru de la byte la word pentru a-l putea impartii la 10 si a vedea ultima cifra a sa
+   138                                      
+   139 0000005D F6F9                        idiv cl
+   140                                      ; in AH avem cifra unitatilor dar noi dorim cifra zecilor asa ca repetam procesul
+   141                                      
+   142 0000005F 6698                        cbw
+   143 00000061 F6F9                        idiv cl
+   144                                      ; acum in AH acevm cifra zecilor
+   145                                      
+   146                                      ;comparam AH cu N sa vedem ce obtinem
+   147                                  
+   148 00000063 3A25[00000000]              cmp ah,[N]
+   149 00000069 7407                        je sunt_egale
+   150                                      
+   151                                      ;in acest caz nu sunt egale
+   152 0000006B B900000000                  mov ecx, 0
+   153 00000070 EB05                        jmp final_verificare
+   154                                      
+   155                                      sunt_egale:
+   156 00000072 B901000000                  mov ecx,1
+   157                                      
+   158                                      ; in ecx vom pastra valoare de adevar a verificarii
+   159                                      final_verificare:
+   160                                      
+   161                                      ; reintoarcem nuamrul original in AL
+   162 00000077 88D8                        mov al,bl
+   163                                  
+   164 00000079 C3                      ret
